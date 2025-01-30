@@ -1,0 +1,69 @@
+Além dos saltos (JMP e Jxx) temos outras instruções que desviam o fluxo atual do programa, uma
+bem comum é a instrução CALL aliada de seu fiel escudeiro RET. 
+
+CALL addr
+
+...
+
+
+addr:
+	
+	...
+	
+	RET
+
+A princípio não há nenhuma diferença visível com relação a instrução JMP. E realmente é muito
+parecida, pois ambas saltam para addr sem dó (não necessita de uma condição para o salto). No entanto
+a instrução CALL fornece um meio para o programa voltar para o local do salto usando outra
+instrução conhecida como RET. Se ficou confuso veja um exemplo.
+
+CALL foo
+JMP beyond_here
+
+foo:
+	MOV DX, 30
+	RET
+	
+Neste trecho a instrução CALL vai saltar para o endereço representado pelo rótulo "foo", mas 
+pouco antes do salto vai armazenar o endereço da próxima instrução após o CALL
+(ali seria a instrução JMP beyond_here). Este endereço é armazenado em numa área de memória
+conhecida como "pilha" (stack em inglês).
+
+Após o salto (no endereço representado pelo rótulo "foo") o processador vai encontrar a instrução
+(em nosso trecho).
+
+MOV DX, 30
+
+
+e logo após esta vai encontrar a instrução RET. A instrução RET é como se fosse o contrário de CALL,
+pois ela recupera o endereço que a instrução CALL armazenou na pilha e faz um salto comum para ele.
+Neste exemplo o salto cairá nas garras da instrução JMP beyond_here que saltará para o endereço
+beyond_here e segue o jogo...
+
+Uma curiosidade é que este processo (CALL/RET) é um dos agentes necessários para a exploração de
+uma falha conhecida como buffer overflow. O motivo disto é que RET não faz nenhum tipo de distinção
+sobre o que ele recupera da pilha. Em outras palavras, RET não vai se importar muito se de alguma
+forma o valor original que CALL colocou na pilha seja modificado para um endereço que seja
+em um local totalmente diferente daquele que seria o natual - o endereço logo após o CALL.
+
+Outra curiosidade é que CALL/RET pode ser substituída por um par de instruções JMP. Observe:
+
+
+PUSH ret_here
+JMP foo
+
+ret_here:
+
+JMP beyond_here
+
+foo:
+	MOV DX, 30
+	POP AX
+	JMP AX
+
+Apesar de um pouco desconjuntado, este trecho reproduz o comportamento da instrução CALL/RET.
+A diferença é que o PUSH, cuja função é armazenar o endereço da próxima instrução na pilha, e o POP,
+cuja função é recuperar o endereço da pilha, é feito nos bastidores pelas instrução CALL e RET.
+
+Obviamente há muito mais que falar sobre CALL/RET, mas isto exigiria  também maiores detalhes 
+sobre a pilha e sobre parâmetros que eu julgo não ser o momento ainda para discuti-los.
